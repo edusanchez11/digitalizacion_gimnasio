@@ -9,12 +9,9 @@ df = pd.read_excel(r"C:\Users\eduar\digitalizacion_gimnasio\data\clientes.xlsx")
 # añadir columna fecha actual
 df['fecha_creacion'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-# Obtener la ruta absoluta a la base de datos en la raíz del proyecto
-db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database', 'gimnasio_crm.db'))
-
-
 # Conectar a la base de datos SQLite
-conn = sqlite3.connect('database/gimnasio_crm.db')
+db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database', 'gimnasio_crm.db'))
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 # Crear la tabla si no existe
@@ -25,6 +22,7 @@ CREATE TABLE IF NOT EXISTS clientes (
     apellidos TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     telefono TEXT UNIQUE NOT NULL,
+    direccion TEXT,
     fecha_creacion TEXT NOT NULL
 )
 ''')
@@ -33,9 +31,9 @@ CREATE TABLE IF NOT EXISTS clientes (
 for _, row in df.iterrows():
     try:
         cursor.execute('''
-            INSERT INTO clientes (nombre, apellidos, email, telefono, fecha_creacion)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (row['nombre'], row['apellidos'], row['email'], row['telefono'], row['fecha_creacion']))
+            INSERT INTO clientes (nombre, apellidos, email, telefono, direccion, fecha_creacion)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (row['nombre'], row['apellidos'], row['email'], row['telefono'], row['direccion'], row['fecha_creacion']))
     except Exception as e:
         print(f"Error al insertar el cliente {row['nombre']} {row['apellidos']}: {e}")
 
