@@ -13,6 +13,7 @@ def email_valido(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
 def registrar_usuario():
+    # Función para registrar un nuevo usuario en la base de datos
     print("Registrar nuevo usuario")
     nombre = input("Nombre: ").strip()
     apellidos = input("Apellidos: ").strip()
@@ -32,7 +33,7 @@ def registrar_usuario():
     db_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
     os.makedirs(db_folder, exist_ok=True)
     db_path = os.path.join(db_folder, 'gimnasio_crm.db')
-    print("Ruta de la base de datos:", db_path)  # Para depuración
+
 
     try:
         conn = sqlite3.connect(db_path)
@@ -50,9 +51,52 @@ def registrar_usuario():
         )
         conn.commit()
         conn.close()
-        print("Usuario registrado correctamente.\n")
+        print("Usuario registrado correctamente")
     except Exception as e:
         print("Error al conectar o escribir en la base de datos:", e)
+
+def buscar_usuario():
+    # funcion para buscar un usuario por nombre o email
+    print("Busqueda de usuario: ")
+    print("1. Busqueda por email")
+    print("2. Busqueda por nombre")
+    opcion = input("Seleccione una opción: ")
+
+    # Ruta absoluta a la base de datos en la raíz del proyecto
+    db_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
+    db_path = os.path.join(db_folder, 'gimnasio_crm.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    if opcion == "1":
+        email = input("Ingrese email: ")
+        cursor.execute("SELECT id, nombre, apellidos, email, telefono, direccion, fecha_creacion FROM clientes WHERE email = ?", (email,))
+        usuario = cursor.fetchone()
+    elif opcion == "2":
+        nombre = input("Ingrese nombre: ")
+        cursor.execute("SELECT id, nombre, apellidos, email, telefono, direccion, fecha_creacion FROM clientes WHERE nombre LIKE ?", ('%' + nombre + '%',))
+        usuario = cursor.fetchall()
+    else:
+        print("Opción no válida.")
+        conn.close()
+        return
+    
+    if usuario:
+        print("Usuario encontrado:")
+        print(f"ID: {usuario[0]}")
+        print(f"Nombre: {usuario[1]} {usuario[2]}")
+        print(f"Email: {usuario[3]}")
+        print(f"Teléfono: {usuario[4]}")
+        print(f"Dirección: {usuario[5]}")
+        print(f"Fecha de creación: {usuario[6]}")
+    else:
+        print("No se encontró ningún usuario con esos datos.")
+    conn.close()
+
+'''
+Este menu muestra las 
+opciones disponibles en el sistema de gestión del gimnasio.
+'''
 
 def mostrar_menu():
     print("""
@@ -74,7 +118,7 @@ def main():
             registrar_usuario()
         elif opcion == "2":
             # Lógica para buscar usuario
-            pass
+            buscar_usuario()
         elif opcion == "3":
             # Lógica para crear factura
             pass
