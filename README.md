@@ -25,6 +25,9 @@ digitalizacion_gimnasio/
 ├── digitalización_gimansio/
 │   └── main.py                 # Script principal del sistema
 │
+├── app.py                      # Aplicación visual Streamlit
+├── requirements.txt            # Dependencias del proyecto
+│
 ├── scripts/
 │   ├── importar_excel.py       # Script para importar usuarios desde Excel
 │   └── ver_datos.py            # Script para visualizar usuarios en tabla
@@ -32,88 +35,58 @@ digitalizacion_gimnasio/
 └── README.md                   # Este archivo
 `````
 
-## Requisitos
-- Python 3.8 o superior
-- Paquetes: pandas, sqlite3, openpyxl (para importar Excel)
+## 🚀 Ejecución de la aplicación visual (Streamlit)
+1. Instala las dependencias
+Asegúrate de tener Python 3.8 o superior.
+Instala las dependencias necesarias ejecutando:
 
-  Instala dependencias con:
-  ````bash
-  pip install pandas openpyxl
-``
-
-Uso
-1. Inicializa la base de datos (opcional)
-Si partes de cero, ejecuta el script de importación para crear la base de datos y cargar usuarios desde un Excel:
-
-````bash
-python scripts/importar_excel.py
-````
-
-2. Ejecuta el sistema principal
 ```bash
-python digitalización_gimansio/main.py
+pip install -r requirements.txt
 ````
+2. Verifica la base de datos
+Asegúrate de tener el archivo de base de datos en gimnasio_crm.db.
+Si no existe, puedes crearlo ejecutando el script de importación o registrando usuarios desde la app.
 
-3. Navega por el menú
-El sistema te mostrará un menú interactivo:
+3. Ejecuta la aplicación Streamlit
+Desde la raíz del proyecto, ejecuta:
 
-````bash
-*** CMR GIMNASIO ***
-1. Registrar nuevo usuario
-2. Buscar usuario
-3. Crear factura para usuario
-4. Mostrar todos los usuarios
-5. Mostrar facturas de un usuario
-6. Resumen financiero por usuario
-7. Salir
+```bash
+streamlit run app.py
 ````
-## 🧾 Funcionalidades detalladas
+Esto abrirá la aplicación en tu navegador en http://localhost:8501.
 
-1. Registrar nuevo usuario
-Solicita: nombre, apellidos, email, teléfono y dirección.
+## 📋 Funcionalidades principales
+- Ver usuarios: Visualiza todos los usuarios registrados en formato tabla.
+- Registrar usuario: Añade nuevos usuarios al sistema.
+- Buscar usuario: Busca usuarios por email o nombre.
+- Crear factura: Genera facturas para usuarios existentes.
+- Ver facturas de usuario: Consulta todas las facturas asociadas a un usuario.
+- Resumen financiero:
+- Resumen general: Muestra métricas agregadas de todos los usuarios y facturas.
+- Buscar usuario: Permite ver el resumen financiero de un usuario específico, filtrando por email o nombre.
 
-Valida que el email tenga formato correcto y no esté duplicado.
+## 📊 Resumen financiero (general y por usuario)
 
-2. Buscar usuario
-Permite buscar por email o por nombre (completo o parcial).
+En la sección Resumen financiero puedes:
+- Ver un resumen general de todos los usuarios, facturas e ingresos del gimnasio.
+- Buscar el resumen financiero de un usuario específico filtrando por email o por nombre.
 
-Muestra los datos completos del usuario.
+¿Cómo funciona?
 
-3. Crear factura para usuario
-Solicita el email, descripción, monto y estado de la factura.
+1. Ve al menú lateral y selecciona "Resumen financiero".
+2. Elige si deseas ver el Resumen general o Buscar usuario.
+- Si seleccionas Buscar usuario, puedes buscar por email o por nombre (parcial o completo).
+- Se mostrará el total de facturas, monto total, pagado y pendiente para el usuario seleccionado.
+3. El Resumen general muestra métricas agregadas de todos los usuarios y facturas, incluyendo:
+- Total de usuarios
+- Total de facturas emitidas
+- Ingresos totales
+- Ingresos recibidos
+- Ingresos pendientes
 
-Asocia y guarda la factura en la base de datos.
-
-4. Mostrar todos los usuarios
-Lista todos los usuarios registrados con información básica.
-
-5. Mostrar facturas de un usuario
-Solicita el email del usuario.
-
-Muestra todas las facturas asociadas con número, fecha, descripción, monto y estado.
-
-Calcula el total facturado y el total pendiente.
-
-6. Resumen financiero por usuario
-Permite buscar por email o nombre.
-
-Muestra el total de facturas, monto total, pagado y pendiente.
-
-7. Salir
-Finaliza el programa.
-
-## 🧪 Ejemplo de uso
-
-````bash
-Seleccione una opción: 1
-Registrar nuevo usuario
-Nombre: Juan
-Apellidos: Pérez García
-Email: juan.perez@email.com
-Teléfono: 555-1234
-Dirección: Calle Mayor 1
-Usuario registrado correctamente
-````
+## 💡 Notas
+Puedes personalizar la app modificando el archivo app.py.
+Si quieres añadir más funcionalidades visuales (gráficos, filtros, exportar datos), Streamlit lo permite fácilmente.
 
 Autor: Eduardo Sánchez
 
