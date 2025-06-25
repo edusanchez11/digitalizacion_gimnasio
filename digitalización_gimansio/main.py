@@ -99,7 +99,7 @@ Esta función solicita el email del usuario, busca su información en la base de
 '''
 
 def crear_factura():
-    print("=== CREAR FACTURA ===")
+    print("CREAR FACTURA")
     email = input("Ingrese email del usuario: ").strip()
 
     # Ruta absoluta a la base de datos
@@ -176,7 +176,7 @@ def mostras_todos_usuarios():
     Esta función muestra todos los usuarios registrados en el sistema.
     Se conecta a la base de datos y recupera la información de los usuarios.
     '''
-    print("=== LISTA DE USUARIOS ===")
+    print("LISTA DE USUARIOS")
 
     # Ruta absoluta a la base de datos
     db_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
@@ -200,7 +200,7 @@ def mostrar_facturas_usuario(email):
     Esta función muestra las facturas de un usuario específico.
     Se conecta a la base de datos y recupera las facturas asociadas al email proporcionado.
     '''
-    print("=== FACTURAS POR USUARIO ===")
+    print("FACTURAS POR USUARIO")
     email = input("Ingrese email del usuario: ")
 
     # Ruta absoluta a la base de datos
@@ -248,7 +248,56 @@ def mostrar_facturas_usuario(email):
     print(f"Monto pendiente: ${total_pendiente:,.2f}")
     conn.close()
 
+def resumen_financiero_usuario():
+    '''
+    Esta función genera un resumen financiero para un usuario específico,
+    permitiendo buscar por email o por nombre.
+    '''
+    print("RESUMEN FINANCIERO POR USUARIO")
+    print("1. Buscar por email")
+    print("2. Buscar por nombre")
+    opcion = input("Seleccione una opción: ")
 
+    # Ruta absoluta a la base de datos
+    db_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
+    db_path = os.path.join(db_folder, 'gimnasio_crm.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    if opcion == "1":
+        valor = input("Ingrese el email del usuario: ").strip()
+        cursor.execute("SELECT id, nombre, apellidos, email FROM clientes WHERE email = ?", (valor,))
+    elif opcion == "2":
+        valor = input("Ingrese el nombre (o parte) del usuario: ").strip()
+        cursor.execute("SELECT id, nombre, apellidos, email FROM clientes WHERE nombre LIKE ?", ('%' + valor + '%',))
+    else:
+        print("Opción no válida.")
+        conn.close()
+        return
+
+    usuarios = cursor.fetchall()
+    if not usuarios:
+        print("No se encontró ningún usuario con esos datos.")
+        conn.close()
+        return
+
+    for usuario in usuarios:
+        cursor.execute('''
+            SELECT COUNT(*), 
+                   COALESCE(SUM(monto), 0),
+                   COALESCE(SUM(CASE WHEN estado = 'Pagada' THEN monto ELSE 0 END), 0),
+                   COALESCE(SUM(CASE WHEN estado = 'Pendiente' THEN monto ELSE 0 END), 0)
+            FROM facturas
+            WHERE cliente_id = ?
+        ''', (usuario[0],))
+        datos = cursor.fetchone()
+        print(f"Usuario: {usuario[1]} {usuario[2]} ({usuario[3]})")
+        print(f"Total facturas: {datos[0]}")
+        print(f"Monto total facturado: ${datos[1]:,.2f}")
+        print(f"Facturas pagadas: ${datos[2]:,.2f}")
+        print(f"Facturas pendientes: ${datos[3]:,.2f}")
+        print("-" * 40)
+    conn.close()
 
 '''
 Este menu muestra las 
@@ -257,7 +306,7 @@ opciones disponibles en el sistema de gestión del gimnasio.
 
 def mostrar_menu():
     print("""
-=== SISTEMA DIGITAL GIMNASIO ===
+*** CMR GIMNASIO ***
 1. Registrar nuevo usuario
 2. Buscar usuario
 3. Crear factura para usuario
@@ -287,7 +336,7 @@ def main():
             mostrar_facturas_usuario()
         elif opcion == "6":
             # Lógica para resumen financiero
-            pass
+            resumen_financiero_usuario()
         elif opcion == "7":
             print("Gracias por usar el sistema del gimnasio. Hasta pronto")
             break
