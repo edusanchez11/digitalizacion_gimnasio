@@ -94,6 +94,163 @@ def buscar_usuario():
     conn.close()
 
 '''
+Función para crear una factura para un usuario existente.
+Esta función solicita el email del usuario, busca su información en la base de datos,
+'''
+
+def crear_factura():
+    print("=== CREAR FACTURA ===")
+    email = input("Ingrese email del usuario: ").strip()
+
+    # Ruta absoluta a la base de datos
+    db_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
+    db_path = os.path.join(db_folder, 'gimnasio_crm.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    # Buscar usuario por email
+    cursor.execute("SELECT id, nombre, apellidos FROM clientes WHERE email = ?", (email,))
+    usuario = cursor.fetchone()
+    if not usuario:
+        print("Usuario no encontrado.")
+        conn.close()
+        return
+    
+    print(f"Usuario encontrado: {usuario[1]} {usuario[2]} ")
+    descripcion = input("Descripción del servicio: ").strip()
+    monto = input("Monto de la factura: ")
+    while True:
+        print("Seleccione el estado de la factura:" )
+        print("1. Pendiente")
+        print("2. Pagada")
+        print("3. Cancelada")
+        estado_opcion = input("Estado de la factura: ")
+        if estado_opcion == "1":
+            estado = "Pendiente"
+            break
+        elif estado_opcion == "2":
+            estado = "Pagada"
+            break
+        elif estado_opcion == "3":
+            estado = "Cancelada"
+            break
+        else:
+            print("Opción no válida. Intente de nuevo.")
+        
+    fecha_emision = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    #crear factura en la base de datos si no existe
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS facturas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_id INTEGER,
+            descripcion TEXT,
+            monto REAL,
+            estado TEXT,
+            fecha_emision TEXT,
+            FOREIGN KEY(cliente_id) REFERENCES clientes(id)
+        )
+    ''')
+
+    # Insertar factura
+    cursor.execute('''
+        INSERT INTO facturas (cliente_id, descripcion, monto, estado, fecha_emision)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (usuario[0], descripcion, float(monto), estado, fecha_emision))
+    conn.commit()
+
+    # Obtener el número de factura recién creada
+    factura_id = cursor.lastrowid
+    print("Factura creada exitosamente!")
+    print(f"Número de factura: FAC{factura_id:03d}")
+    print(f"Fecha de emisión: {fecha_emision}")
+    print(f"Cliente: {usuario[1]} {usuario[2]}")
+    print(f"Descripción: {descripcion}")
+    print(f"Monto: ${float(monto):.2f}")
+    print(f"Estado: {estado}")
+
+    conn.close()
+
+def mostras_todos_usuarios():
+    '''
+    Esta función muestra todos los usuarios registrados en el sistema.
+    Se conecta a la base de datos y recupera la información de los usuarios.
+    '''
+    print("=== LISTA DE USUARIOS ===")
+
+    # Ruta absoluta a la base de datos
+    db_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
+    db_path = os.path.join(db_folder, 'gimnasio_crm.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nombre, apellidos, email, telefono, fecha_creacion FROM clientes")
+    usuarios = cursor.fetchall()
+    for idx, usuario in enumerate(usuarios, 1):
+        print(f"Usuario #{idx}:")
+        print(f"ID: USR{usuario[0]:03d}")
+        print(f"Nombre: {usuario[1]} {usuario[2]}")
+        print(f"Email: {usuario[3]}")
+        print(f"Teléfono: {usuario[4] if usuario[4] else 'No especificado'}")
+        print(f"Fecha de registro: {usuario[5][:10]}")
+    print(f"Total de usuarios registrados: {len(usuarios)}")
+    conn.close()
+
+def mostrar_facturas_usuario(email):
+    '''
+    Esta función muestra las facturas de un usuario específico.
+    Se conecta a la base de datos y recupera las facturas asociadas al email proporcionado.
+    '''
+    print("=== FACTURAS POR USUARIO ===")
+    email = input("Ingrese email del usuario: ")
+
+    # Ruta absoluta a la base de datos
+    db_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
+    db_path = os.path.join(db_folder, 'gimnasio_crm.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    # buscar usuario
+    cursor.execute("SELECT id, nombre, apellidos FROM clientes WHERE email = ?", (email,))
+    usuario = cursor.fetchone()
+    if not usuario:
+        print("Usuario no encontrado.")
+        conn.close()
+        return
+
+    print(f"--- FACTURAS DE {usuario[1]} {usuario[2]} ---")
+    cursor.execute('''
+        SELECT id, fecha_emision, descripcion, monto, estado
+        FROM facturas
+        WHERE cliente_id = ?
+        ORDER BY fecha_emision
+    ''', (usuario[0],))
+    facturas = cursor.fetchall()
+
+    if not facturas:
+        print("No hay facturas para este usuario.")
+        conn.close()
+        return
+    
+    total_facturado = 0
+    total_pendiente = 0
+    for idx, factura in enumerate(facturas, 1):
+        print(f"Factura #{idx}:")
+        print(f" Número: FAC{factura[0]:03d}")
+        print(f" Fecha: {factura[1]}")
+        print(f" Descripción: {factura[2]}")
+        print(f" Monto: ${factura[3]:.2f}")
+        print(f" Estado: {factura[4]}")
+        total_facturado += factura[3]
+        if factura[4] == "Pendiente":
+            total_pendiente += factura[3]
+    print(f"Total de facturas: {len(facturas)}")
+    print(f"Monto total facturado: ${total_facturado:,.2f}")
+    print(f"Monto pendiente: ${total_pendiente:,.2f}")
+    conn.close()
+
+
+
+'''
 Este menu muestra las 
 opciones disponibles en el sistema de gestión del gimnasio.
 '''
@@ -121,13 +278,13 @@ def main():
             buscar_usuario()
         elif opcion == "3":
             # Lógica para crear factura
-            pass
+            crear_factura()
         elif opcion == "4":
             # Lógica para mostrar todos los usuarios
-            pass
+            mostras_todos_usuarios()
         elif opcion == "5":
             # Lógica para mostrar facturas de un usuario
-            pass
+            mostrar_facturas_usuario()
         elif opcion == "6":
             # Lógica para resumen financiero
             pass
